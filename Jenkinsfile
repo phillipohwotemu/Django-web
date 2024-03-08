@@ -12,9 +12,11 @@ pipeline {
         stage('Prepare Environment') {
             steps {
                 script {
-                    // Creates a virtual environment only if it doesn't already exist
-                    if (sh(script: 'test -d env || echo "envNotFound"', returnStdout: true).trim() == 'envNotFound') {
+                    // Ensuring python3 is used to create a virtual environment
+                    if (sh(script: 'which python3', returnStatus: true) == 0) {
                         sh 'python3 -m venv env'
+                    } else {
+                        error "Python3 is not installed"
                     }
                 }
             }
@@ -22,29 +24,27 @@ pipeline {
 
         stage('Test') {
             steps {
-                sh '''
+                sh(script: '''
                 source env/bin/activate
                 pip install -r requirements.txt
                 python manage.py test
-                '''
+                ''', returnStdout: true, script: '/bin/bash')
             }
         }
 
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['aws-credentials']) {
-                    // Exclude the local virtual environment directory but include other necessary files and directories
-                    sh """
-                    rsync -avz --exclude '/env/' --exclude '.git/' --exclude 'db.sqlite3' ./ ec2-user@44.212.36.244:/path/to/your/deployment/directory && \
+                    sh(script: '''
+                    rsync -avz --exclude 'env/' --exclude '.git/' --exclude 'db.sqlite3' ./ ec2-user@44.212.36.244:/path/to/your/deployment/directory && \
                     ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 \\
                     'cd /path/to/your/deployment/directory && \\
-                    if [ ! -d env ]; then python3 -m venv env; fi && \\
                     source env/bin/activate && \\
                     pip install -r requirements.txt && \\
                     python manage.py migrate && \\
                     python manage.py collectstatic --no-input && \\
                     sudo systemctl restart your_application_service'
-                    """
+                    ''', script: '/bin/bash')  // Adjust the command to restart your Django app
                 }
             }
         }
