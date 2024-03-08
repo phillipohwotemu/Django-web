@@ -12,10 +12,10 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
-                python3 -m venv env
+                /usr/bin/python3 -m venv env
                 source env/bin/activate
                 pip install -r requirements.txt
-                python3 manage.py test
+                /usr/bin/python3 manage.py test
                 '''
             }
         }
@@ -29,8 +29,8 @@ pipeline {
                     'cd /path/to/target/directory/on/ec2 && \\
                     source env/bin/activate && \\
                     pip install -r requirements.txt && \\
-                    python manage.py migrate && \\
-                    python manage.py collectstatic --no-input && \\
+                    /usr/bin/python3 manage.py migrate && \\
+                    /usr/bin/python3 manage.py collectstatic --no-input && \\
                     sudo systemctl restart gunicorn'  # Adjust the command to restart your app
                     """
                 }
