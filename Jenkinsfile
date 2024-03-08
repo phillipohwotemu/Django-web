@@ -11,17 +11,15 @@ pipeline {
 
         stage('Prepare Environment') {
             steps {
-                sh 'rm -rf env || true' // Ensure the env directory is clean before creating a new venv
-                sh '/usr/bin/python3 -m venv env' // Create virtual environment
+                sh '/usr/bin/python3 -m venv env || true' // Ignore errors if the env directory already exists
             }
         }
 
         stage('Test') {
             steps {
                 sh '''
-                source env/bin/activate
-                pip install -r requirements.txt
-                python manage.py test
+                /bin/bash -c "source env/bin/activate && pip install -r requirements.txt"
+                /bin/bash -c "python manage.py test"
                 '''
             }
         }
@@ -34,7 +32,7 @@ pipeline {
 
                     // SSH into EC2 to perform deployment tasks
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
+                    ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 /bin/bash << EOF
                     cd /home/ec2-user/project
                     source env/bin/activate
                     pip install -r requirements.txt
