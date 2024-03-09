@@ -2,23 +2,22 @@ pipeline {
     agent any
 
     stages {
-        stage('Setup & Debug') {
-            steps {
-                sh 'rm -rf env || true' // Clean up previous environment attempts
-                sh '/usr/bin/python3 -m venv env || true' // Attempt to create the virtual environment
-                sh 'ls -la' // List current directory to debug file presence
-                sh '/usr/bin/python3 --version' // Verify Python installation
-            }
-        }
+        // Other stages...
 
         stage('Test') {
             steps {
-                sh 'if [ -f env/bin/activate ]; then source env/bin/activate; fi' // Conditionally activate venv
-                sh 'if [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "requirements.txt not found!"; fi'
-                sh 'if [ -f manage.py ]; then /usr/bin/python3 manage.py test; else echo "manage.py not found or tests failed"; fi'
+                script {
+                    // Use script block for conditional execution
+                    if (fileExists('env/bin/activate')) {
+                        // Explicitly call bash to run the script
+                        sh '/bin/bash -c "source env/bin/activate && pip install -r requirements.txt && python manage.py test"'
+                    } else {
+                        echo 'Virtual environment activation script does not exist.'
+                    }
+                }
             }
         }
-        
-        // Keep the Deploy stage as is, ensuring adjustments for your specific setup
+
+        // Further stages...
     }
 }
