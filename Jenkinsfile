@@ -34,7 +34,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(credentials: ['aws-credentials']) {
+                sshagent(credentials: ['ec2-deploy-key-django-app']) {
                     sh '''
                     /bin/bash -c "rsync -avz -e 'ssh -o StrictHostKeyChecking=no' --exclude 'env/' --exclude '.git/' --exclude 'db.sqlite3' ./ ec2-user@44.212.36.244:/home/ec2-user/project"
                     '''
