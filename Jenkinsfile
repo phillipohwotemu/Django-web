@@ -17,28 +17,21 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
+                sh script: '''
+                #!/bin/bash
                 source env/bin/activate
                 pip install -r requirements.txt || echo "requirements.txt not found!"
-                '''
-            }
-        }
-
-        stage('Run My Script') {
-            steps {
-                sh '''
-                chmod +x myscript.sh
-                ./myscript.sh
-                '''
+                ''', label: 'Activating virtualenv and installing dependencies'
             }
         }
 
         stage('Test') {
             steps {
-                sh '''
+                sh script: '''
+                #!/bin/bash
                 source env/bin/activate
                 python3 manage.py test
-                '''
+                ''', label: 'Running tests'
             }
         }
 
