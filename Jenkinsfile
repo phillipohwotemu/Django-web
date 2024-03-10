@@ -18,6 +18,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
+                #!/bin/bash
                 source env/bin/activate
                 pip install -r requirements.txt || echo "requirements.txt not found!"
                 '''
@@ -27,6 +28,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '''
+                #!/bin/bash
                 source env/bin/activate
                 python3 manage.py test
                 '''
