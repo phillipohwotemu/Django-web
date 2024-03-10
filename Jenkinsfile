@@ -9,38 +9,25 @@ pipeline {
             }
         }
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
-                sh script: '''
-                #!/bin/bash
-                source env/bin/activate
-                pip install -r requirements.txt || echo "requirements.txt not found!"
-                ''', label: 'Activating virtualenv and installing dependencies'
+                sh(label: 'Activating virtualenv and installing dependencies', script: '''
+                  /bin/bash -c "source env/bin/activate && pip install -r requirements.txt || echo 'requirements.txt not found!'"
+                ''')
             }
         }
 
         stage('Test') {
             steps {
-                sh script: '''
-                #!/bin/bash
-                source env/bin/activate
-                python3 manage.py test
-                ''', label: 'Running tests'
+                sh '/bin/bash -c "source env/bin/activate && python3 manage.py test"'
             }
         }
 
+        // Assuming your Deploy stage requires similar Bash commands, adjust accordingly.
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    sh '''
-                    rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude 'env/' --exclude '.git/' --exclude 'db.sqlite3' ./ ec2-user@44.212.36.244:/home/ec2-user/project
-                    '''
+                    sh '/bin/bash -c "rsync -avz -e \\"ssh -o StrictHostKeyChecking=no\\" --exclude \'env/\' --exclude \'.git/\' --exclude \'db.sqlite3\' ./ ec2-user@44.212.36.244:/home/ec2-user/project"'
                 }
             }
         }
