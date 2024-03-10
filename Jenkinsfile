@@ -5,13 +5,13 @@ pipeline {
         stage('Cleanup and Prepare Environment') {
             steps {
                 sh 'rm -rf env || true'
-                sh '/usr/bin/python3 -m venv env'
+                sh 'python3 -m venv env'
             }
         }
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/phillipohwotemu/Django-web.git'
+                checkout scm
             }
         }
 
