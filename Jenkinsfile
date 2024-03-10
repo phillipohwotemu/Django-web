@@ -17,23 +17,39 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'bash -c "source env/bin/activate && pip install -r requirements.txt || echo \\"requirements.txt not found!\\""'
+                sh '''
+                source env/bin/activate
+                pip install -r requirements.txt || echo "requirements.txt not found!"
+                '''
+            }
+        }
+
+        stage('Run My Script') {
+            steps {
+                sh '''
+                chmod +x myscript.sh
+                ./myscript.sh
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                sh 'bash -c "source env/bin/activate && python3 manage.py test"'
+                sh '''
+                source env/bin/activate
+                python3 manage.py test
+                '''
             }
         }
 
         stage('Deploy') {
-    steps {
-        sshagent(credentials: ['ec2-deploy-key-django-app']) {
-            sh '...'
+            steps {
+                sshagent(credentials: ['ec2-deploy-key-django-app']) {
+                    sh '''
+                    rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude 'env/' --exclude '.git/' --exclude 'db.sqlite3' ./ ec2-user@44.212.36.244:/home/ec2-user/project
+                    '''
+                }
+            }
         }
-    }
-}
-
     }
 }
