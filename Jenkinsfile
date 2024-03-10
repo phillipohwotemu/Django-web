@@ -17,21 +17,25 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                #!/bin/bash
-                source env/bin/activate
-                pip install -r requirements.txt || echo "requirements.txt not found!"
-                '''
+                script {
+                    sh '''
+                    #!/bin/bash
+                    source env/bin/activate
+                    pip install -r requirements.txt || echo "requirements.txt not found!"
+                    '''
+                }
             }
         }
 
         stage('Test') {
             steps {
-                sh '''
-                #!/bin/bash
-                source env/bin/activate
-                python3 manage.py test
-                '''
+                script {
+                    sh '''
+                    #!/bin/bash
+                    source env/bin/activate
+                    python3 manage.py test
+                    '''
+                }
             }
         }
 
