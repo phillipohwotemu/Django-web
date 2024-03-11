@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        // Define environment variables if needed
-    }
-
     stages {
         stage('Cleanup and Prepare Environment') {
             steps {
@@ -24,18 +20,18 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh(label: 'Activating virtualenv and installing dependencies', script: '''
+                sh '''
                     /bin/bash -c "source env/bin/activate && pip install -r requirements.txt || echo 'requirements.txt not found!'"
-                ''')
+                '''
             }
         }
 
         stage('Test') {
             steps {
                 script {
-                    // This assumes your tests can run within the Docker environment
-                    // Adjust if necessary for your setup
-                    docker.run('wizebird/django-app:latest', '/bin/bash -c "source env/bin/activate && python manage.py test"')
+                    // Assuming your tests can run within the Docker environment
+                    // This is a simple placeholder; adjust based on your actual test command
+                    docker.run('wizebird/django-app:latest', 'python manage.py test')
                 }
             }
         }
