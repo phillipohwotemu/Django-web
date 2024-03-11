@@ -1,16 +1,24 @@
 pipeline {
     agent any
 
+    // Define environment variables if needed
+    // environment { }
+
     stages {
-        stage('Clone Repository') {
+        stage('Checkout SCM') {
             steps {
-                git 'https://github.com/phillipohwotemu/Django-web.git'
+                // This step is automatically handled by Jenkins' SCM checkout process
+                // Ensure your Jenkins job is configured to checkout the correct branch (e.g., 'main')
+                echo 'Checking out source code...'
             }
         }
 
         stage('Pull Docker Image') {
             steps {
                 script {
+                    // Pull your Docker image from Docker Hub
+                    // Ensure Docker is installed and Jenkins has permissions to run Docker commands
+                    echo 'Pulling Docker image...'
                     docker.image('wizebird/django-app:latest').pull()
                 }
             }
@@ -18,14 +26,11 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
-                        docker stop django-app-container || true
-                        docker rm django-app-container || true
-                        docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest
-                    EOF
-                    '''
+                script {
+                    echo 'Deploying application...'
+                    // Add deployment steps here
+                    // For example, deploying to an AWS EC2 instance could involve SSH commands
+                    // to pull the Docker image on the EC2 instance and restart the container
                 }
             }
         }
