@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        // Define environment variables if needed
+        // Example environment variable
+        // SECRET_TOKEN = credentials('my-secret-token')
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git url: 'https://github.com/phillipohwotemu/Django-web.git', branch: 'main'
+                checkout scm
             }
         }
 
@@ -22,7 +23,6 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 script {
-                    // Pull the latest version of your Docker image from Docker Hub
                     docker.pull('wizebird/django-app:latest')
                 }
             }
@@ -39,8 +39,6 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // This assumes your tests can run within the Docker environment
-                    // Adjust if necessary for your setup
                     docker.run('wizebird/django-app:latest', '/bin/bash -c "source env/bin/activate && python manage.py test"')
                 }
             }
@@ -49,9 +47,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    // Commands to SSH into your EC2 instance and deploy the Docker container
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@<your-ec2-instance-ip> << EOF
+                    ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-ip << EOF
                         docker pull wizebird/django-app:latest
                         docker stop django-app-container || true
                         docker rm django-app-container || true
@@ -65,7 +62,6 @@ pipeline {
 
     post {
         always {
-            // Steps to clean up, send notifications, etc., after the pipeline runs
             echo "Pipeline execution complete."
         }
     }
