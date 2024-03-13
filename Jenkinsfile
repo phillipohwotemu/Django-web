@@ -22,27 +22,37 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 script {
-                    // Correct syntax to pull the Docker image
-                    def dockerImage = docker.image('wizebird/django-app:latest')
-                    dockerImage.pull()
+                    // Using Docker Pipeline syntax to pull the image
+                    def appImage = docker.image('wizebird/django-app:latest')
+                    appImage.pull()
                 }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh(label: 'Activating virtualenv and installing dependencies', script: '''
-                    /bin/bash -c "source env/bin/activate && pip install -r requirements.txt || echo 'requirements.txt not found!'"
-                ''')
+                script {
+                    // Activating virtual environment and installing dependencies within Docker
+                    def appImage = docker.image('wizebird/django-app:latest')
+                    appImage.inside {
+                        sh '''
+                        python3 -m venv env
+                        source env/bin/activate
+                        pip install -r requirements.txt || echo 'requirements.txt not found!'
+                        '''
+                    }
+                }
             }
         }
 
         stage('Test') {
             steps {
                 script {
-                    // Corrected syntax to run commands inside the Docker container
-                    def dockerImage = docker.image('wizebird/django-app:latest')
-                    dockerImage.run('/bin/bash -c "source env/bin/activate && python manage.py test"')
+                    // Running tests within the Docker container
+                    def appImage = docker.image('wizebird/django-app:latest')
+                    appImage.inside {
+                        sh 'python manage.py test'
+                    }
                 }
             }
         }
@@ -50,6 +60,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
+                    // Deploying to EC2, leveraging Docker for pulling and running the container
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
                         docker pull wizebird/django-app:latest
