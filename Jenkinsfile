@@ -6,6 +6,12 @@ pipeline {
     }
 
     stages {
+        stage('Checkout Code') {
+            steps {
+                git url: 'https://github.com/phillipohwotemu/Django-web.git', branch: 'main'
+            }
+        }
+
         stage('Cleanup and Prepare Environment') {
             steps {
                 sh 'rm -rf env || true'
@@ -43,9 +49,9 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    // Commands to SSH into your EC2 instance, stop existing container, remove it, and run a new one
+                    // Commands to SSH into your EC2 instance and deploy the Docker container
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
+                    ssh -o StrictHostKeyChecking=no ec2-user@<your-ec2-instance-ip> << EOF
                         docker pull wizebird/django-app:latest
                         docker stop django-app-container || true
                         docker rm django-app-container || true
