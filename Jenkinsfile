@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        // Example of setting a dummy environment variable if you have no actual variables to set
         DUMMY_VAR = 'dummy'
     }
 
@@ -23,8 +22,9 @@ pipeline {
         stage('Pull Docker Image') {
             steps {
                 script {
-                    // Pull the latest version of your Docker image from Docker Hub
-                    docker.pull('wizebird/django-app:latest')
+                    // Correct syntax to pull the Docker image
+                    def dockerImage = docker.image('wizebird/django-app:latest')
+                    dockerImage.pull()
                 }
             }
         }
@@ -40,9 +40,9 @@ pipeline {
         stage('Test') {
             steps {
                 script {
-                    // This assumes your tests can run within the Docker environment
-                    // Adjust if necessary for your setup
-                    docker.run('wizebird/django-app:latest', '/bin/bash -c "source env/bin/activate && python manage.py test"')
+                    // Corrected syntax to run commands inside the Docker container
+                    def dockerImage = docker.image('wizebird/django-app:latest')
+                    dockerImage.run('/bin/bash -c "source env/bin/activate && python manage.py test"')
                 }
             }
         }
@@ -50,7 +50,6 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    // Commands to SSH into your EC2 instance, stop existing container, remove it, and run a new one
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
                         docker pull wizebird/django-app:latest
@@ -66,7 +65,6 @@ pipeline {
 
     post {
         always {
-            // Steps to clean up, send notifications, etc., after the pipeline runs
             echo "Pipeline execution complete."
         }
     }
