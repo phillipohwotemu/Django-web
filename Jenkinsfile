@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        DUMMY_VAR = 'dummy'
-    }
-
     stages {
         stage('Checkout Code') {
             steps {
@@ -12,46 +8,30 @@ pipeline {
             }
         }
 
-        stage('Cleanup and Prepare Environment') {
-            steps {
-                sh 'rm -rf env || true'
-                sh 'python3 -m venv env'
-            }
-        }
-
-        stage('Pull Docker Image') {
+        stage('Setup Python Environment') {
             steps {
                 script {
-                    // Using Docker Pipeline syntax to pull the image
-                    def appImage = docker.image('wizebird/django-app:latest')
-                    appImage.pull()
-                }
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    // Activating virtual environment and installing dependencies within Docker
-                    def appImage = docker.image('wizebird/django-app:latest')
-                    appImage.inside {
+                    // Using a Python Docker image to create a virtual environment and install dependencies
+                    docker.image('python:3.8-slim').inside {
                         sh '''
-                        python3 -m venv env
-                        source env/bin/activate
-                        pip install -r requirements.txt || echo 'requirements.txt not found!'
+                        python -m venv env
+                        . env/bin/activate
+                        pip install -r requirements.txt
                         '''
                     }
                 }
             }
         }
 
-        stage('Test') {
+        stage('Run Tests') {
             steps {
                 script {
-                    // Running tests within the Docker container
-                    def appImage = docker.image('wizebird/django-app:latest')
-                    appImage.inside {
-                        sh 'python manage.py test'
+                    // Using the same Python Docker image to run your Django tests
+                    docker.image('python:3.8-slim').inside {
+                        sh '''
+                        . env/bin/activate
+                        python manage.py test
+                        '''
                     }
                 }
             }
@@ -60,13 +40,14 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    // Deploying to EC2, leveraging Docker for pulling and running the container
+                    // Assuming your deployment commands here don't need Python.
+                    // They execute on the EC2 instance which should have all the necessary environment setup.
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
-                        docker pull wizebird/django-app:latest
-                        docker stop django-app-container || true
-                        docker rm django-app-container || true
-                        docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest
+                    ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-ip << EOF
+                    docker pull wizebird/django-app:latest
+                    docker stop django-app-container || true
+                    docker rm django-app-container || true
+                    docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest
                     EOF
                     '''
                 }
