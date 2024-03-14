@@ -11,10 +11,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build your Docker image
-                    sh 'docker build -t my-django-app-image:latest .'
-                    // Optionally, push the image to a Docker registry
-                    // sh 'docker push my-django-app-image:latest'
+                    // Update this if you're building the image as part of the pipeline
+                    sh 'docker build -t wizebird/django-app:latest .'
+                    // Optionally, push the image to Docker Hub (assuming credentials are set up)
+                    // sh 'docker push wizebird/django-app:latest'
                 }
             }
         }
@@ -23,7 +23,7 @@ pipeline {
             steps {
                 script {
                     // Run tests using the built Docker image
-                    sh 'docker run --rm my-django-app-image:latest python manage.py test'
+                    sh 'docker run --rm wizebird/django-app:latest python manage.py test'
                 }
             }
         }
@@ -34,10 +34,10 @@ pipeline {
                     // Deploy to your EC2 instance using SSH
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << EOF
-                    docker pull my-django-app-image:latest
+                    docker pull wizebird/django-app:latest
                     docker stop django-app-container || true
                     docker rm django-app-container || true
-                    docker run -d --name django-app-container -p 8000:8000 my-django-app-image:latest
+                    docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest
                     EOF
                     '''
                 }
