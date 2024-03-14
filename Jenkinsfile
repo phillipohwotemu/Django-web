@@ -30,7 +30,9 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sshagent(credentials: ['ec2-deploy-key-django-app']) {
+                sshagent(['ec2-deploy-key-django-app']) {
+                    // Replace 'your-ec2-ip' with the actual IP address of your EC2 instance
+                    // Make sure 'my-django-app-image:latest' matches the name and tag of your Docker image
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-ip << EOF
                     docker pull my-django-app-image:latest
