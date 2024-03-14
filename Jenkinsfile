@@ -8,17 +8,13 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Using a Python Docker image to create a virtual environment and install dependencies
-                    docker.image('python:3.8-slim').inside {
-                        sh '''
-                        python -m venv env
-                        . env/bin/activate
-                        pip install -r requirements.txt
-                        '''
-                    }
+                    // Assuming you're in the root directory where the Dockerfile is located
+                    sh 'docker build -t my-django-app-image:latest .'
+                    // Optionally, push the image to a registry if Jenkins is running on a different host
+                    // sh 'docker push my-django-app-image:latest'
                 }
             }
         }
@@ -26,13 +22,8 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    // Using the same Python Docker image to run your Django tests
-                    docker.image('python:3.8-slim').inside {
-                        sh '''
-                        . env/bin/activate
-                        python manage.py test
-                        '''
-                    }
+                    // Utilize your Docker image to run tests
+                    sh 'docker run --rm my-django-app-image:latest python manage.py test'
                 }
             }
         }
@@ -40,14 +31,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent(credentials: ['ec2-deploy-key-django-app']) {
-                    // Assuming your deployment commands here don't need Python.
-                    // They execute on the EC2 instance which should have all the necessary environment setup.
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-ip << EOF
-                    docker pull wizebird/django-app:latest
+                    docker pull my-django-app-image:latest
                     docker stop django-app-container || true
                     docker rm django-app-container || true
-                    docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest
+                    docker run -d --name django-app-container -p 8000:8000 my-django-app-image:latest
                     EOF
                     '''
                 }
