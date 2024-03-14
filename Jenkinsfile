@@ -32,17 +32,12 @@ pipeline {
     steps {
         sshagent(credentials: ['ec2-deploy-key-django-app']) {
             sh '''
-            ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 << 'EOF'
-            set -e
-            docker pull wizebird/django-app:latest
-            docker stop django-app-container || true
-            docker rm django-app-container || true
-            docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest
-            EOF
+            ssh -o StrictHostKeyChecking=no ec2-user@44.212.36.244 'docker pull wizebird/django-app:latest && docker stop django-app-container || true && docker rm django-app-container || true && docker run -d --name django-app-container -p 8000:8000 wizebird/django-app:latest'
             '''
         }
     }
 }
+
 
     }
 
